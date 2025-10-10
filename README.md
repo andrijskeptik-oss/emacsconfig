@@ -1,0 +1,2 @@
+# emacsconfig
+Моя конфирурация emacs
