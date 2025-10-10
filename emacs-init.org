@@ -1,0 +1,988 @@
+** emacs
+#+header: :tangle ~/.emacs.d/init.el :mkdirp yes :noweb yes
+#+begin_src emacs-lisp
+  <<emacs-faces>>
+  <<emacs-mirrors>>
+  <<emacs-packages>>
+  <<emacs-as-commands>>
+#+end_src
+*** настройка интерфейса
+;была схема modus-vivendi-tinted
+#+begin_src emacs-lisp :noweb-ref emacs-faces 
+    (tool-bar-mode -1)
+    (menu-bar-mode -1)
+    (scroll-bar-mode -1)
+    (setq inhibit-startup-screen t)
+    (defalias 'yes-or-no-p 'y-or-n-p)
+    (custom-set-variables
+     '(custom-enabled-themes '(manoj-dark))
+    )
+    (custom-set-faces
+   '(default ((t (:height 210 :width normal)))))
+  (put 'narrow-to-region 'disabled nil)
+  (put 'upcase-region 'disabled nil)
+  (put 'downcase-region 'disabled nil)
+  (setq x-select-enable-clipboard t)
+#+end_src 
+#+begin_src emacs-lisp :noweb-ref emacs-faces
+  (global-set-key [remap dabbrev-expand] 'hippie-expand)
+#+end_src  
+Зеркала, use-package
+#+header: :noweb-ref emacs-mirrors
+#+begin_src emacs-lisp
+  (defvar bootstrap-version)
+  (let ((bootstrap-file
+         (expand-file-name
+          "straight/repos/straight.el/bootstrap.el"
+          (or (bound-and-true-p straight-base-dir)
+              user-emacs-directory)))
+        (bootstrap-version 7))
+    (unless (file-exists-p bootstrap-file)
+      (with-current-buffer
+          (url-retrieve-synchronously
+           "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
+           'silent 'inhibit-cookies)
+        (goto-char (point-max))
+        (eval-print-last-sexp)))
+    (load bootstrap-file nil 'nomessage))
+  (setq straight-use-package-by-default t)
+  (setq package-enable-at-startup nil)
+  (straight-use-package 'use-package)
+  
+#+end_src
+,#+header: :noweb-ref emacs-mirrors
+#+begin_src emacs-lisp 
+;  (require 'package)
+
+;  (add-to-list 'package-archives '("elpy" . "http://jorgenschaefer.github.io/packages/"))
+;  (add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/"))
+;  (add-to-list 'package-archives '("org" . "http://orgmode.org/elpa/"))
+;  (add-to-list 'package-archives '("melpa-stable" . "https://stable.melpa.org/packages/"))
+;  (add-to-list 'package-archives '("nongnu" . "https://elpa.nongnu.org/nongnu/"))
+;  (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+;  (package-initialize)
+
+#+end_src
+
+***  Пакеты
+** nerd-icons
+#+header: :noweb-ref emacs-packages
+#+begin_src emacs-lisp
+(use-package nerd-icons)
+#+end_src
+** hydra
+#+header:  :noweb-ref emacs-packages
+#+begin_src emacs-lisp
+  (use-package hydra)
+#+end_src
+** ivy
+**** ВЫПОЛНИТЬ разобраться со всеми функциями ivy и consuel и настроить нужные
+#+begin_src emacs-lisp :noweb-ref emacs-packages
+    (use-package counsel
+  	:commands (ivy-mode) 
+  	:bind (
+  	 ("C-c s" . swiper-isearch)
+  	 ("M-x" . counsel-M-x)
+  	 ("C-x C-f" . counsel-find-file)
+  	 ("M-y" . counsel-yank-pop)
+  	 ("<f1> f" . counsel-describe-function)
+  	 ("<f1> v" . counsel-describe-variable)
+  	 ("<f1> l" . counsel-find-library)
+  	 ("<f2> i" . counsel-info-lookup-symbol)
+  	 ("<f2> u" . counsel-unicode-char)
+  	 ("<f2> j" . counsel-set-variable)
+  	 ("C-x b" . ivy-switch-buffer)
+  	 ("C-c v" . ivy-push-view)
+  	 ("C-c V" . ivy-pop-view)
+  	       )
+          :init
+  	 (ivy-mode 1)
+  	:config
+      	  (setq ivy-use-virtual-buffers t)
+  	  (setq ivy-count-format "(%d/%d) ")
+  	)
+  (use-package ivy-hydra)
+
+#+end_src 
+** markdown-mode
+#+begin_src emacs-lisp :noweb-ref emacs-packages
+  (use-package markdown-mode)
+#+end_src
+** ВЫПОЛНИТЬ HTML разобраться с режимами html и настроить для себя -
+** web-mode -
+#+header: :noweb-ref no
+#+begin_src emacs-lisp :tangle no
+(use-package web-mode
+    :mode ("\\.html?\\'" . web-mode))
+#+end_src   
+** emmet-mode позволяет быстро писать HTML и CSS с помощью сокращений. -
+#+header: :noweb-ref no
+#+begin_src emacs-lisp 
+  (use-package emmet-mode
+    :hook ((html-mode css-mode web-mode) . emmet-mode)
+    :config
+    ;; Установите уровень отступов по вашему предпочтению 
+    (setq emmet-indentation 2)) 
+#+end_src   
+** закрытие тегов с помощью sgml-mode -
+#+header: :noweb-ref no
+#+begin_src emacs-lisp 
+(add-hook 'html-mode-hook
+          (lambda ()
+            (setq sgml-quick-keys 'close)
+            (sgml-electric-tag-pair-mode 1)))
+#+end_src   
+** yasnippet для шаблонов HTML -
+#+header: :noweb-ref no
+#+begin_src emacs-lisp :exports none
+(use-package yasnippet
+  :config
+  (yas-global-mode 1))
+#+end_src   
+
+** calibredb сохранил на всякий случай -
+#+header: :noweb-ref no
+#+begin_src emacs-lisp 
+    (use-package calibredb
+      :config
+       (setq calibredb-id-width -1)
+       (setq calibredb-root-dir "~/Calibre/All")
+       (setq calibredb-db-dir (expand-file-name "metadata.db" calibredb-root-dir))
+       (setq calibredb-search-page-max-rows 200))
+#+end_src 
+** shell-command+
+#+header:  :noweb-ref emacs-packages
+#+begin_src emacs-lisp
+  (use-package shell-command-plus
+     :bind (("M-!" .  shell-command+)
+  	 :map dired-mode-map
+     	   ("M-!" .  shell-command+)))  	       
+#+end_src  
+** dired
+#+header: :noweb-ref emacs-packages
+#+begin_src emacs-lisp
+     (setq dired-listing-switches
+            "-l  --human-readable --group-directories-first --no-group")
+      ;; Эта команда полезна, когда вы хотите закрыть окно 'dirvish-side'
+      ;; автоматически при открытии файла
+      (setq dired-isearch-filenames "dwin" )
+      (setq dired-kill-when-opening-new-dired-buffer t )
+      (setq wdired-allow-to-change-permissions t ) 
+      (setq dired-guess-shell-alist-user (list
+    				    '("\\.\\(avi\\|mp4\\|mkv\\|mpg\\)" "mpv --ao=pulse")
+    				    '("\\.\\torrent" "kitty aria2c -c")
+    				    '("\\.\\torrent" "kitty aria2c -S")
+  				    ))
+      (put 'dired-find-alternate-file 'disabled nil)
+      
+
+#+end_src				    
+** посмотреть diredpreview, dirvish
+** dirvish
+#+header: :noweb-ref emacs-packages
+#+begin_src emacs-lisp
+(use-package dirvish
+  :ensure t
+  :init
+  (dirvish-override-dired-mode)
+  :custom
+  (dirvish-quick-access-entries ; It's a custom option, `setq' won't work
+   '(("h" "~/"                          "Home")
+     ("d" "~/Downloads/"                "Downloads")
+     ("m" "/mnt/"                       "Drives")
+;c     ("s" "/ssh:my-remote-server")      "SSH server"
+;     ("e" "/sudo:root@localhost:/etc")  "Modify program settings"
+     ("t" "~/.local/share/Trash/files/" "TrashCan")))
+  :config
+  ;; (dirvish-peek-mode)             ; Preview files in minibuffer
+  ;; (dirvish-side-follow-mode)      ; similar to `treemacs-follow-mode'
+  (setq dirvish-mode-line-format
+        '(:left (sort symlink) :right (omit yank index)))
+  (setq dirvish-attributes           ; The order *MATTERS* for some attributes
+        '(vc-state subtree-state nerd-icons collapse git-msg file-time file-size)
+        dirvish-side-attributes
+        '(vc-state nerd-icons collapse file-size))
+  ;; open large directory (over 20000 files) asynchronously with `fd' command
+  (setq dirvish-large-directory-threshold 20000)
+  :bind ; Bind `dirvish-fd|dirvish-side|dirvish-dwim' as you see fit
+  (("C-c f" . dirvish)
+   :map dirvish-mode-map               ; Dirvish inherits `dired-mode-map'
+   (";"   . dired-up-directory)        ; So you can adjust `dired' bindings here
+   ("?"   . dirvish-dispatch)          ; [?] a helpful cheatsheet
+   ("a"   . dirvish-setup-menu)        ; [a]ttributes settings:`t' toggles mtime, `f' toggles fullframe, etc.
+   ("f"   . dirvish-file-info-menu)    ; [f]ile info
+   ("o"   . dirvish-quick-access)      ; [o]pen `dirvish-quick-access-entries'
+   ("s"   . dirvish-quicksort)         ; [s]ort flie list
+   ("r"   . dirvish-history-jump)      ; [r]ecent visited
+   ("l"   . dirvish-ls-switches-menu)  ; [l]s command flags
+   ("v"   . dirvish-vc-menu)           ; [v]ersion control commands
+   ("*"   . dirvish-mark-menu)
+   ("y"   . dirvish-yank-menu)
+   ("N"   . dirvish-narrow)
+   ("^"   . dirvish-history-last)
+   ("TAB" . dirvish-subtree-toggle)
+   ("M-f" . dirvish-history-go-forward)
+   ("M-b" . dirvish-history-go-backward)
+   ("M-e" . dirvish-emerge-menu)))
+#+end_src
+атрибуты
+,#+header: :noweb-ref emacs-packages
+#+begin_src emacs-lisp
+(setq dirvish-attributes
+      (append
+       ;; Порядок этих атрибутов незначителен, они всегда
+       ;; отображается в том же положении.
+       '(vc-state subtree-state nerd-icon collapse)
+       ;; Остальные атрибуты отображаются в том порядке, в котором они появляются в этом списке.
+       '(git-msg file-time file-size)))
+#+end_src
+
+** dired-x
+,#+header: :noweb-ref emacs-packages
+#+begin_src emacs-lisp
+(use-package dired-x
+  :config
+  ;; Make dired-omit-mode hide all "dotfiles"
+  (setq dired-omit-files
+        (concat dired-omit-files "\\|^\\..*$")))
+#+end_src
+** diredfl
+,#+header: :noweb-ref emacs-packages
+#+begin_src emacs-lisp
+(use-package diredfl
+  :hook
+  ((dired-mode . diredfl-mode)
+   ;; highlight parent and directory preview as well
+   (dirvish-directory-view-mode . diredfl-mode))
+  (set-face-attribute 'diredfl-dir-name nil :bold t))
+#+end_src
+** ВЫПОЛНИТЬ DocView
+разобраться з другими форматами epub djvu fb2  и самим docview
+посмотреть преобразование в текст с pandoc и озвучка + метки
+#+begin_src emacs-lisp :noweb-ref emacs-packages 
+
+  (use-package doc-view
+	    :config
+	      ;; Прокрутка вверх колесиком мыши
+	      (define-key doc-view-mode-map (kbd "<wheel-down>") 'doc-view-scroll-up-or-next-page)
+              ;; Прокрутка вниз колесиком мыши
+              (define-key doc-view-mode-map (kbd "<wheel-up>") 'doc-view-scroll-down-or-previous-page)
+  )
+#+end_src
+** pdf-tools -
+при обновлении nixos нарушает работу org
+,+header: :noweb-ref emacs-packages
+#+begin_src emacs-lisp 
+  (use-package pdf-tools
+    :commands (pdf-tools-install)
+    :init (pdf-tools-install))
+#+end_src
+
+** ВЫПОЛНИТЬ telega 
+доделать модуль експорта чата
+сделать модуль експорта текстовых сообщений канала
+
+конфиг
+#+begin_src emacs-lisp  :noweb-ref emacs-packages
+     (use-package telega
+       :commands (telega)
+       :bind-keymap 
+     	   ("C-c t" . telega-prefix-map)
+       :bind (:map telega-chat-mode-map
+     	   ("s" . as-org-telega-msg)
+     	   ("y" . as-telega-news-copy))
+     	  (:map telega-prefix-map
+     	      ("g" .(lambda ()
+     			(interactive nil 'org-mode)
+     		      (telega-browse-url (org-entry-get (point) "url")))
+
+     	       ))
+       :init
+     	   (setq telega-use-docker t)
+     	   (setq telega-emoji-use-images t)
+       :config
+     	  (setq default-directory "~/Downloads/")
+               (setq switch-to-buffer-preserve-window-point nil)  	   
+               (setq telega-translate-to-language-by-default "uk")
+     	  (require 'telega-adblock) 
+     ;          (telega-adblock-mode 1) 
+        )
+
+      (defun as-org-telega-msg ()
+        (interactive)
+        (let ((msg (telega-msg-at (point))))
+          (if msg (let*  ((chat (telega-msg-chat msg))
+     	    (title (telega-chat-title chat))
+     	    (text (progn (telega-msg-copy-text msg) (car kill-ring)))
+     	    (link (progn (telega-msg-copy-link msg) (car kill-ring )))
+     	    (date (format-time-string "%Y-%m-%d %H:%M" (plist-get msg :date)))
+     	    )
+     	    (current-kill 2)
+     	    (with-current-buffer (get-buffer-create "*my-news*")
+     	     (erase-buffer)
+     	     (org-mode)
+      	     (insert (format "* %s [%s]\n" title date))
+     	     (insert (concat text "\n"))
+     	     (org-set-property "url" link)
+     	     (org-set-property "date" (format "<%s>"date))
+     	     (org-set-property "channel" title)
+    	     (org-set-property "header" (format "%s [%s]\n" title date))
+   	     (write-region nil nil "~/Документы/org/news.org" t)
+     	  )
+
+     ))))
+
+     (defun as-telega-news-copy ()
+        (interactive)
+        (when-let (msg (telega-msg-at (point)))
+     	  (let* ((chat (telega-msg-chat msg))
+     	      (title (telega-chat-title chat))
+     	      (text (progn (telega-msg-copy-text msg) (car kill-ring)))
+     	      (date (format-time-string "%Y-%m-%d %H:%M" (plist-get msg :date))))
+     	   (current-kill 1)
+     	   (when-let (fwrd (plist-get msg :forward_info))
+     		(setq date (format-time-string "%Y-%m-%d %H:%M" (plist-get fwrd :date)))
+     		(setq title (telega-chat-title
+  		(telega-chat-get (plist-get (plist-get fwrd :origin) :chat_id)))))    
+
+  	     (kill-new  (format "%s [%s]\r\n%s"
+  		title date (mapconcat 'identity (string-lines text) "\r\n" )))
+     	   )))
+
+
+
+
+
+      (defun as-org-get-news()
+       (interactive)
+       (org-back-to-heading)
+  (kill-new (format "%s\n%s" (org-get-heading) 
+         (car (last (split-string (org-get-entry) ":END:"))))))
+
+     		         
+     	
+      (defun as-telega-news-capture()
+       (interactive)
+       (telega-msg-copy-link (telega-msg-at (point)))
+       (org-capture nil "p")
+      )		       
+   
+
+#+end_src
+
+#+RESULTS:
+: as-telega-news-capture
+
+#+header: :noweb-ref no
+установка сервера телега в  docker
+#+begin_src bash
+  #!/usr/bin/env bash
+  docker pull zevlg/telega-server:latest
+#+end_src
+
+#+results:
+| latest:                              | Pulling                                                                 | from | zevlg/telega-server |    |      |     |                            |
+| Digest:                              | sha256:7080229ab6bd547f36edfc63c4a53fac25d2e9a4f8d688e320ab8e7954b29049 |      |                     |    |      |     |                            |
+| Status:                              | Image                                                                   | is   | up                  | to | date | for | zevlg/telega-server:latest |
+| docker.io/zevlg/telega-server:latest |                                                                         |      |                     |    |      |     |                            |
+
+;; (insert (cdr (prop-match-value (text-property-search-forward ':telega-link))))
+экспорт списка каналов telegram
+сделать отдельно функцию експорта списка каналов, которой передается список каналов и буфер, куда она будет писать. Сделать опрделение папаметров канала так как делается в информации канала
+#+header: :tangle ~/.emacs.d/as-telega-channels-export.el :mkdirp yes :noweb yes 
+#+begin_src emacs-lisp
+  ;;; as-telega-channels-export.el --- Export all subscribed channels to ORG  
+
+  ;; Copyright (C) 2025 by Andrij Skeptyk.
+
+
+  ;; telega is free software: you can redistribute it and/or modify
+  ;; it under the terms of the GNU General Public License as published by
+  ;; the Free Software Foundation, either version 3 of the License, or
+  ;; (at your option) any later version.
+
+  ;; telega is distributed in the hope that it will be useful,
+  ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ;; GNU General Public License for more details.
+
+  ;; You should have received a copy of the GNU General Public License
+  ;; along with telega.  If not, see <http://www.gnu.org/licenses/>.
+
+
+  (require 'telega)
+
+  (defun as-telega-channel-export (chat)
+    "Return org item for the CHAT.
+  CHAT must be a public channel or supergroup."
+    (let* ((username (telega-chat-username chat))
+           (url  (concat (or (plist-get telega--options :t_me_url)
+                                 "https://t.me/")
+                             username))
+           (title (substring-no-properties (or (telega-chat-title chat) "")))
+           (link (format "[[%s][%s]]" url title))
+           (description (substring-no-properties
+                         (or (telega-tl-str (telega--full-info
+                                             (telega-chat--info chat))
+                                            :description)
+                             ""))))
+       (format "* %s\n:PROPERTIES:\n:title: %s\n:url: %s\n:link: %s\n:END:\n:DESCRIPTION:\n%s\n:END:\n"
+  	   title  title url link description)))
+
+  ;;;###autoload
+  (defun as-telega-channels-export (filename)
+    "Export all telegam channels to org"
+    (interactive "FExport channels into org file: ")
+
+    (let* ((filter '(and (type channel) has-username))
+           (chats (telega-filter-chats telega--filtered-chats filter))
+           (export-list (mapcar #'as-telega-channel-export chats)))
+      (with-temp-file filename
+        (mapc (lambda (item) (insert item)) export-list)
+        )))
+;;      (message "%d channels exported into %s" (length chats) filename)))
+
+  (provide 'as-telega-channels-export)
+
+  ;;; telega-channels-export.el ends here
+
+#+end_src
+
+#+RESULTS:
+: as-telega-channels-export
+
+** ОТМЕНЕНО pandoc-mode -
+разобраться, как делать експорт в pdf wisyprint
+,#+header: :noweb-ref emacs-packages
+#+begin_src emacs-lisp
+  (use-package pandoc-mode)
+#+end_src
+** ВЫПОЛНИТЬ elfeed
+сделать фильтры
+#+header:  :noweb-ref emacs-packages
+#+begin_src emacs-lisp
+     (use-package elfeed
+     :config 
+      (setq elfeed-feeds
+        	'(
+        	  ("http://gen.lib.rus.ec/rss/index.php" book lg)
+        	  ("http://feed.rutracker.cc/atom/f/1418.atom" book rt it)
+        	  ("http://feed.rutracker.cc/atom/f/2022.atom" book rt pol)
+        	  ("http://feed.rutracker.cc/atom/f/2375.atom" book rt pol)
+        	  ("http://feed.rutracker.cc/atom/f/2471.atom" book rt pol)
+        	  ("http://feed.rutracker.cc/atom/f/995.atom" book rt  pol)
+  	        ( "http://feed.rutracker.cc/atom/f/2198.atom"  rt hd)
+  		("http://feed.rutracker.cc/atom/f/7.atom"  rt norus )
+  		("http://feed.rutracker.cc/atom/f/22.atom" kino rt rus)
+  		("http://feed.rutracker.cc/atom/f/9.atom" ser rt rus)
+  		("http://feed.rutracker.cc/atom/f/704.atom" ser rt tur)
+        	  )
+          )
+      (run-with-timer 0 3600 'elfeed-update)
+      (add-hook 'elfeed-search-mode-hook 'elfeed-update)
+  )
+#+end_src
+** w3m
+#+header:  :noweb-ref emacs-packages
+#+begin_src emacs-lisp
+  (use-package w3m
+  :commands (w3m w3m-browse-url)
+  :bind (("C-c W" . w3m)
+         ("C-c w" . w3m-browse-url))
+  :init
+  (setq w3m-use-cookies t
+        w3m-home-page "https://google.com"
+        w3m-use-toolbar t
+        w3m-key-binding 'info
+        w3m-coding-system 'utf-8
+        w3m-default-coding-system 'utf-8
+        w3m-terminal-coding-system 'utf-8
+        w3m-use-favicon t
+        w3m-favicon-size 16)
+
+  ;; Интеграция с browse-url для открытия ссылок в w3m
+  ;;(setq browse-url-browser-function 'w3m-browse-url)
+
+  :config
+  ;; Дополнительные настройки после загрузки пакета
+  (when (executable-find "w3m")
+    (setq w3m-command (executable-find "w3m")))
+    (setq org-link-frame-setup '((w3m . w3m)))
+   (setq w3m-use-tab t
+      w3m-use-tab-line t) 
+  )
+#+end_src
+** ВЫПОЛНИТЬ emms разобраться
+#+header:  :noweb-ref emacs-packages
+#+begin_src emacs-lisp
+   (use-package emms
+      	  :bind (
+      	   ("C-c m" . emms)
+      		 )
+      	:config
+         (emms-all)
+         (setq emms-player-list '(emms-player-mpv))
+         (setq emms-player-mpv-command-name "mpv")
+         (setq emms-info-functions '(emms-info-native))
+         (setq emms-source-beets-database "~/.config/beets/my_library.db")
+
+
+  )	 
+#+end_src
+** slime
+#+header:  :noweb-ref emacs-packages
+#+begin_src emacs-lisp
+   (use-package slime)
+#+end_src
+** ВЫПОЛНИТЬ Org Mode
+настроить переменные настроить файлы agenda 
+#+header:  :noweb-ref emacs-packages
+#+begin_src emacs-lisp
+  (use-package ob-nix)
+  (use-package org
+     :mode ("\\.org\\(\\|_archive\\(_20[0-9][0-9]\\)?\\)$" . org-mode)
+     :bind (("C-c l" . org-store-link)
+  	      ("C-c a" . org-agenda)
+  	      ("C-c <SPC>" . org-table-blank-field)
+  	      ("C-<f9>" . as-org-get-news)
+  	      ("C-c c" . org-capture)
+  	      )
+     :config 
+  	 (setq org-startup-folded "fold")
+
+  	 (setq org-hide-block-startup "hideblocks")
+  	 (setq org-hide-drawer-startup "hidedrawers")
+  	 (setq org-cycle-separator-lines 10)
+           (setq org-startup-with-inline-images t)
+  	(setq org-link-shell-confirm-function nil)
+  	(setq org-link-elisp-confirm-function nil)
+  	(setq org-confirm-babel-evaluate nil)
+
+  	(global-set-key  (kbd "<f9>")
+  	   (defhydra hydra-org-as-global (:exit t)
+  	    "Полезные команды org"
+  	  ("<SPC>" org-cycle-agenda-files "файлы org")
+  	  ("l"  org-toggle-link-display "отображение ссылок")
+  	  ("<f9>" (find-file "~/Documents/org/") "каталог org")
+  	  ("q" nil "выход")))
+
+  	 (setq org-todo-keywords
+  	   '((sequence "ВЫПОЛНИТЬ(t)"   "|" "ГОТОВО(d!)" )
+  	    (sequence  "ПРИОСТАНОВЛЕНО(w@/!)" "|" "ОТМЕНЕНО(c@)" )))
+
+  	 (setq org-todo-keyword-faces
+  		  (quote (("ВЫПОЛНИТЬ" :foreground "red" :weight bold)
+  		   ("ГОТОВО" :foreground "forest green" :weight bold)
+  		   ("ПРИОСТАНОВЛЕНО" :foreground "orange" :weight bold)
+  		   ("ОТМЕНЕНО" :foreground "forest green" :weight bold))))
+
+  	 (setq org-use-fast-todo-selection t)
+  	 (setq org-treat-S-cursor-todo-selection-as-state-change nil)
+
+  	 (setq org-todo-state-tags-triggers nil)
+
+  	 (setq org-refile-targets (quote ((nil :maxlevel . 9)
+  				   (org-agenda-files  :maxlevel . 9))))
+
+  	 (setq org-directory "~/Документы/org")
+  	 (setq org-default-notes-file "~/Документы/org/todo.org")
+  	(setq org-agenda-files '(
+  				 "~/Документы/org/todo.org"
+  				 "~/Документы/org/diary.org"
+  				 "~/Документы/org/cycle.org"
+  				 ))
+
+  	 (setq org-capture-templates
+  	      (quote (("t" "Выполнить" entry (file "~/Документы/org/todo.org")
+  			  "* ВЫПОЛНИТЬ %?\n%U\n%l\n" )
+  		("j" "Дневник" entry (file+datetree "~/Документы/org/diary.org")
+  			 "* %?\n%T\n" )
+                  ("p" "Новость" entry (file "~/Документы/org/news.org")
+  		       "* %? :NEWS:\n%T\n%c\n" )
+
+  		("w" "org-protocol" entry (file "~/Документы/org/todo.org")
+  			 "* ВЫПОЛНИТЬ Review %c\n%U\n" :immediate-finish t)
+  		("h" "Привычка" entry (file "~/Документы/org/cycle.org")
+  		    "* ВЫПОЛНИТЬ %?\n%U\n%a\nSCHEDULED: %(format-time-string \"%<<%Y-%m-%d %a .+1d/3d>>\")\n
+  		   :PROPERTIES:\n:STYLE: habit\n:REPEAT_TO_STATE: ВЫПОЛНИТЬ\n:END:\n")
+  		)))
+     (push '("\\.\\(pdf\\|djvu\\|epub\\)\\'" . "zathura %s") org-file-apps)
+
+#+end_src
+Настройка експорта latex/pdf разобраться
+#+header:  :noweb-ref emacs-packages
+#+begin_src emacs-lisp
+
+  (setq org-export-default-language "ru") 
+  (setq org-latex-compiler "xelatex")
+  (add-to-list 'org-latex-packages-alist
+	     '("AUTO" "polyglossia" t ( "xelatex" "lualatex")))
+  (add-to-list 'org-latex-packages-alist
+	     '("T2A" "fontenc" t ))
+	 )
+
+#+end_src
+Refiling разобратся
+#+header: :noweb-ref no
+#+begin_src emacs-lisp
+; Цели включают в себя этот файл и любой файл, вносящий вклад в повестку дня — до 9 уровней глубины.
+
+; Используйте полные пути для целей повторного файла — мы храним файлы напрямую в IDO.
+(setq org-refile-use-outline-path t)
+
+; Цели выполняются напрямую с IDO
+(setq org-outline-path-complete-in-steps nil)
+
+; Разрешить refile создавать родительские задачи с подтверждением
+(setq org-refile-allow-creating-parent-nodes (quote confirm))
+
+; Используйте IDO для завершения как буфера, так и файла, а также ido-everwhere для t
+#(setq org-completion-use-ido t)
+#(setq ido-everywhere t)
+#(setq ido-max-directory-size 100000)
+#(ido-mode (quote both))
+; Использовать текущее окно при посещении файлов и буферов с помощью ido
+#(setq ido-default-file-method 'selected-window)
+#(setq ido-default-buffer-method 'selected-window)
+; Использовать текущее окно для косвенного отображения буфера
+#(setq org-indirect-buffer-display 'current-window)
+
+;;;;  настройки refile
+; Исключить задачи состояния ГОТОВО из целевых объектов refile
+(defun bh/verify-refile-target ()
+  "Exclude todo keywords with a done state from refile targets"
+  (not (member (nth 2 (org-heading-components)) org-done-keywords)))
+
+(setq org-refile-target-verify-function 'bh/verify-refile-target)
+#+end_src
+Языки программирования
+#+header:  :noweb-ref emacs-packages
+#+begin_src emacs-lisp
+  (org-babel-do-load-languages
+  'org-babel-load-languages
+  '((shell . t)
+  (eshell . t)
+  (org . t)
+  (python . t)
+  (awk . t)
+  (sed . t)
+  (sqlite . t)
+  (nix . t)))
+#+end_src
+
+** ВЫПОЛНИТЬ Org-Roam
+сделать через use-package
+протестировать ежедневные заметки придумать виды заметок пока литературные, цитаты-заметки, концептуальные, учебные (для усвоєния материала). как ежедневные превратить в концептуальные, копировать?
+ #+begin_src emacs-lisp :noweb-ref emacs-packages
+              (use-package org-roam  :ensure t)
+                (global-set-key "\C-cnf"  'org-roam-node-find)
+                (global-set-key "\C-cni"  'org-roam-node-insert)
+                (global-set-key "\C-cno"  'org-id-get-create)
+                (global-set-key "\C-cnt"  'org-roam-tag-add)
+                (global-set-key "\C-cna"  'org-roam-alias-add)
+                (global-set-key "\C-cnl"  'org-roam-buffer-toggle)
+
+              (defun set-org-roam-dir  (roam-dir)
+                (setq org-roam-directory (file-truename roam-dir))
+                (setq org-roam-db-location (file-truename (concat roam-dir "org-roam.db")))
+        	(org-roam-db-sync)  )
+          (set-org-roam-dir  (concat (getenv "HOME") "/Документы/roam/main/"))
+          (setq org-roam-db-update-on-save t)
+          (global-set-key  (kbd "<f8>")
+               (defhydra hydra-as-global (:exit t)
+         	  "Полезные команды"
+        	("f" org-roam-node-find "org-roam-node-find")
+        	("i" org-roam-node-insert "org-roam-node-insert")
+        	("o"  org-id-get-create "org-id-get-create")
+        	("t" org-roam-tag-add "org-roam-tag-add")
+        	("a" org-roam-alias-add "org-roam-alias-add")
+  	      	("q" nil "выход")))
+          
+;          (setq find-file-visit-truename nil) ;;не использовать символические ссылки
+
+          (setq org-roam-node-display-template (concat "${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
+   (add-to-list 'display-buffer-alist
+                '("\\*org-roam\\*"
+                  (display-buffer-in-direction)
+                  (direction . right)
+                  (window-width . 0.33)
+                  (window-height . fit-window-to-buffer)))
+ (setq org-roam-completion-everywhere t) ;завершение за пределами org-roam
+ (setq org-roam-dailies-directory "daily/")
+
+(setq org-roam-dailies-capture-templates
+      '(("d" "default" entry
+         "* %?"
+         :target (file+head "%<%Y-%m-%d>.org"
+                            "#+title: %<%Y-%m-%d>\n"))))
+#+end_src
+
+*** ВЫПОЛНИТЬ Полезные функции -переделать в меню ivy
+<F12>
+#+header: :noweb-ref emacs-as-commands
+#+begin_src emacs-lisp
+  (global-set-key  (kbd "<f12>")
+       (defhydra hydra-as-global (:exit t)
+	  "Полезные команды"
+	("<SPC>" as-set-truncate-lines-refresh "перенос строк")
+	("s" (switch-to-buffer "*scratch*") "*scratch*")
+	("v" visible-mode "режим отображения")
+	("i" org-display-inline-images "режим изображений")
+	("<f12>" as-crow-translate "crow region")
+	("q" nil "выход")))
+    (global-set-key (kbd "<S-f12>") 'as-crow-translate-help)
+    (global-set-key (kbd "<C-f12>") 'as-org-crow-translate-line)
+    (global-set-key (kbd "<pause>") 'as-kill-current-buffer)
+    (global-set-key (kbd "<XF86Favorites>") 'browse-url-at-point)
+
+		  (defun as-set-truncate-lines-refresh ()
+		    (interactive)
+		    (setq truncate-lines (not truncate-lines))
+		    ;; now refresh window display (an idiom from simple.el):
+		    (save-excursion
+		      (set-window-start (selected-window)
+					(window-start (selected-window)))))
+
+	      (defun as-kill-current-buffer()
+	       (interactive)
+	       (kill-buffer nil))
+
+ 
+#+end_src   
+** ВЫПОЛНИТЬ crow-translate - перевод помеченого текста
+сделать отдельный модуль. Перевод делать в виде отдельного временного буфера отдельно перевод строки и отдельно перевод строки org. Асинхронный перевод. 
+#+header:  :noweb-ref emacs-as-commands
+#+begin_src emacs-lisp
+			   (setq  as-translate-shell-cmd "crow -b -i -s en -e bing")
+
+			   (defun as-crow-translate ()
+			     "С помощью crow-translate переводит регион или строку на русский"
+			     (interactive )
+			     (let ((start) (end))
+			     (unless (use-region-p)
+			       (push-mark)
+			       (end-of-line))    
+			     (setq start (max (mark) (point)) end (min (mark)(point))) 
+			     (shell-command-on-region start end as-translate-shell-cmd t t )
+			     (delete-char -1)
+			     (exchange-point-and-mark t)))
+
+
+			 (defun as-crow-translate-help ()
+			   "Переводит буфер *help* и выводит его в всплывающем окне."
+			   (interactive)
+			   (let ((help-buffer (get-buffer "*Help*")))
+			     (if help-buffer
+				 (with-current-buffer help-buffer  
+				 (shell-command-on-region (point-min) (point-max)
+				  ( concat "text=` " as-translate-shell-cmd 
+				  "`; notify-send -u critical 'Перевод' \"$text\"")
+				 nil nil)))))
+
+
+
+
+			 (defun as-org-crow-translate-line ()
+			   (interactive)
+			   (forward-line 0)
+			   (search-forward-regexp "^\** [0-9.]" (line-end-position) t)
+			   (search-forward-regexp "^\**" (line-end-position) t)
+			   (search-forward-regexp "::" (line-end-position) t)
+			   (search-forward-regexp " *" (line-end-position) t)
+			   (unless (eolp)
+			       (shell-command-on-region (line-end-position) (point) as-translate-shell-cmd t t )
+			       (delete-char -1)
+			       (exchange-point-and-mark t)))
+
+	    (setq as-org-translate-skip-list
+		 (list
+		  '("^[ -@]*$\\|^ *|\\|[а-я]" nil)
+		  '("^ *?:PROPERTIES:" "^ *:END:")
+		  '("^ *?:.*?:" nil)
+		  '("^ *?\\#\\+begin_example" "^ *?\\#\\+end_example")
+		  '("^ *?\\#\\+begin_src" "^ *?\\#\\+end_src")
+		  '("^ *?\\#\\+begin_html" "^ *?\\#\\+end_html")
+		  '("\\(^ *?\\#\\+\\|^ *?<<.*?>> *$\\|^ *?<<.*?>> *?<<.*?>> *$\\)" nil)
+		  ))
+	   (defun as-org-skip-no-trans ()
+	     (interactive)
+	     (forward-line 0)
+	     (let ((skip-list (seq-find (lambda (elem)
+			    (search-forward-regexp  (car elem) (line-end-position) t)) 
+			      as-org-translate-skip-list)))
+	       (if skip-list
+		 (progn
+
+		   (if (car (cdr skip-list))
+			 (progn (forward-line)
+			 (search-forward-regexp  (car (cdr skip-list)) nil t)))
+		 (end-of-line)
+		   ))))    
+
+	  (defun as-org-translate-from-point ()
+	     (interactive)
+	     (let ((buf-lines (count-lines (point-min) (point-max)))) 
+	     (while (not (eobp))
+	       (as-org-skip-no-trans)
+	       (unless (eolp)
+	       (message "Перевод строки: %d/%d" (line-number-at-pos) buf-lines)
+	       (as-org-crow-translate-line)
+	       (end-of-line))
+	       (forward-line))))
+
+
+  (defun as-org-delete-empty-end-entry ()
+    (interactive)
+    (while  (and (search-forward-regexp "^ *$" nil t) (not (eobp)))
+      (forward-line)
+      (if (search-forward-regexp "^*" (line-end-position) t)
+	  (progn (forward-line -1) (delete-line)))))
+#+end_src 
+** ВЫПОЛНИТЬ rhvoice
+сделать выбор движков
+#+header: :tangle ~/.emacs.d/as-rhvoice-tts.el :mkdirp yes :noweb yes 
+#+begin_src emacs-lisp
+;;; as-rhvoice-tts.el --- Asynchronous sentence TTS via RHVoice-test -*- lexical-binding: t; -*-
+;; Copyright (c) 2025 Your Name
+;; Author: Your Name <your@email.com>
+;; Keywords: multimedia, tts, speech
+;; Version: 0.1
+;; Package-Requires: ((emacs "24.3"))
+;; Created: June 2025
+;; URL: https://github.com/AndrijSkeptyk/
+
+;;; License:
+;;
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+;;; Commentary:
+
+;; Простое асинхронное озвучивание предложений текущего буфера через RHVoice-test.
+;; Для работы требуется установленный RHVoice-test и доступный голос (например, aleksandr).
+;; Использование:
+;;   M-x as-rhvoice-tts-from-point  — начать озвучивание с положения точки.
+;;   M-x rhvoice-tts-stop    — остановить озвучивание.
+
+;;; Code:
+
+(defgroup as-rhvoice-tts nil
+  "Асинхронное озвучивание буфера по предложениям через RHVoice-test."
+  :group 'multimedia)
+
+(defcustom as-rhvoice-tts-voice "aleksandr"
+  "Имя голоса RHVoice для RHVoice-test."
+  :type 'string
+  :group 'as-rhvoice-tts)
+
+(defvar as-rhvoice-tts--process nil "Активный процесс RHVoice-test.")
+
+(defun as-rhvoice-tts--current-sentence ()
+  "Вернуть текст текущего предложения."
+  (save-excursion
+    (let ((start (progn (forward-line 0) (point)))
+          (end (progn (forward-sentence) (point))))
+      (buffer-substring-no-properties start end))))
+
+(defun as-rhvoice-tts--play-current-sentence ()
+  "Озвучить текущее предложение через RHVoice-test и перейти к следующему."
+  (let ((sentence (as-rhvoice-tts--current-sentence)))
+    (setq as-rhvoice-tts--process
+          (make-process
+           :name "as-rhvoice-tts"
+           :buffer nil
+           :command (list "RHVoice-test" "-q" "max" "-p" as-rhvoice-tts-voice)
+           :connection-type 'pipe
+           :noquery t
+           :sentinel
+           (lambda (_proc event)
+             (when (string= event "finished\n")
+               (unless (eobp)
+                 (forward-sentence)
+                 (as-rhvoice-tts--play-current-sentence))))))
+    (process-send-string as-rhvoice-tts--process sentence)
+    (process-send-eof as-rhvoice-tts--process)))
+
+;;;###autoload
+(defun as-rhvoice-tts-from-point ()
+  "Озвучить текущий буфер по предложениям через RHVoice-test."
+  (interactive)
+;  (goto-char (point-min))
+  (as-rhvoice-tts--play-current-sentence))
+
+;;;###autoload
+(defun as-rhvoice-tts-stop ()
+  "Остановить озвучивание RHVoice-test."
+  (interactive)
+  (when (process-live-p as-rhvoice-tts--process)
+    (delete-process as-rhvoice-tts--process)))
+
+(provide 'as-rhvoice-tts)
+
+;;; as-rhvoice-tts.el ends here
+#+end_src
+** ВЫПОЛНИТЬ модуль очистки org после преобразования в него из разных форматов
+#+begin_src emacs-lisp
+  ;;; clean-my-buffer.el --- Очистка буфера по заданным правилам -*- lexical-binding: t -*-
+
+  ;; Author: Ваше Имя <your.email@example.com>
+  ;; Version: 0.1
+  ;; Keywords: text, cleaning
+  ;; Package-Requires: ()
+  ;; URL: https://example.com/your-package-info
+
+  ;;; Commentary:
+
+  ;; Этот пакет содержит функции для очистки буфера:
+  ;; - удалить строки до тех, что начинаются с <<user-query-content>>
+  ;; - вставить "* " в начало первой непустой строки после каждой такой строки
+  ;; - удалить строки, начинающиеся с << и заканчивающиеся >>
+  ;; - удалить строки, начинающиеся с [[data: и [[file:
+  ;; - уменьшить несколько подряд идущих пустых строк до одной
+
+  ;;; Code:
+
+  (defun clean-my-buffer-extended ()
+    "Очистить буфер по правилам и вставить '* ' в начало первой непустой строки после каждой строки с <<user-query-content."
+    (interactive)
+    (goto-char (point-min))
+    (if (re-search-forward "^<<user-query-content" nil t)
+        (progn
+          (beginning-of-line)
+          (delete-region (point-min) (point)))
+      (message "Не найдена строка <<user-query-content>>"))
+    (goto-char (point-min))
+    (while (re-search-forward "^<<user-query-content" nil t)
+      (when (re-search-forward "^\\s-*\\([^[:space:]].*\\)" nil t)
+        (beginning-of-line)
+        (insert "* ")))
+    (goto-char (point-min))
+    (flush-lines "^<<.*>>$")
+    (goto-char (point-min))
+    (flush-lines "^\\[\\[data:")
+    (goto-char (point-min))
+    (flush-lines "^\\[\\[file:"))
+
+(defun as-clean-buffer-empty-string ()
+
+    (goto-char (point-min))
+    (while (re-search-forward "\n\\{2,\\}" nil t)
+      (replace-match "\n\n")))
+
+(provide 'as-clean-buffer-empty-string)
+
+
+#+end_src
+** ВЫПОЛНИТЬ разобраться с авто дополнениями abbrev, dabbrev, hippie expand, Yasnippet,autoinsert
+** ВЫПОЛНИТЬ разобраться с проверкою синтаксиса flyspell и т.д.
+
