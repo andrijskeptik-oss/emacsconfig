@@ -13,6 +13,7 @@
     (menu-bar-mode -1)
     (scroll-bar-mode -1)
     (setq inhibit-startup-screen t)
+    (setq bookmark-save-flag 1)
     (defalias 'yes-or-no-p 'y-or-n-p)
     (custom-set-variables
      '(custom-enabled-themes '(manoj-dark))
@@ -983,6 +984,26 @@ Refiling разобратся
 
 
 #+end_src
-** ВЫПОЛНИТЬ разобраться с авто дополнениями abbrev, dabbrev, hippie expand, Yasnippet,autoinsert
-** ВЫПОЛНИТЬ разобраться с проверкою синтаксиса flyspell и т.д.
+** выбор файлов для qutebrowser
+#+header:  :noweb-ref emacs-as-commands
+#+begin_src emacs-lisp
+  (defun dired-marked-to-qutebrowser ()
+    "Получает список помеченных файлов в буфере Dired и записывает их 
+    полные пути, каждый на новой строке, в файл, имя которого запрашивается у пользователя."
+    (interactive)
+    
+    (unless (eq major-mode 'dired-mode)
+      (error "Эта команда работает только в буфере Dired"))
+    
+    (let ((marked-files (dired-get-marked-files))
+          (output-file nil))
+      
+      (if  (and marked-files qutebrowser-select-files)
+          (with-temp-file qutebrowser-select-files
+            (insert (mapconcat 'identity marked-files "\n")))))
+    (delete-frame))
+          
+  (define-key dired-mode-map (kbd "z") 'dired-marked-to-qutebrowser)
+#+end_src
 
+** ВЫПОЛНИТЬ разобраться с авто дополнениями hippie expand, Yasnippet,autoinsert
