@@ -66,15 +66,23 @@
 #+end_src
 
 ***  Пакеты
+#+header: :noweb-ref emacs-packages
+#+begin_src emacs-lisp
+(straight-use-package '(org :type built-in))
+#+end_src
 ** nerd-icons
 #+header: :noweb-ref emacs-packages
 #+begin_src emacs-lisp
-(use-package nerd-icons)
-#+end_src
-** hydra
-#+header:  :noweb-ref emacs-packages
-#+begin_src emacs-lisp
-  (use-package hydra)
+  (use-package nerd-icons
+    :ensure t
+    :config
+    ;; Принудительно задаем шрифт для иконок
+    (set-fontset-font t 'unicode (font-spec :family "JetBrainsMono Nerd Font") nil 'append))
+
+  (use-package nerd-icons-dired
+    :ensure t
+    :hook (dired-mode . nerd-icons-dired-mode))
+
 #+end_src
 ** ivy
 **** ВЫПОЛНИТЬ разобраться со всеми функциями ivy и consuel и настроить нужные
@@ -105,6 +113,227 @@
   (use-package ivy-hydra)
 
 #+end_src 
+** hydra
+#+header:  :noweb-ref emacs-packages
+#+begin_src emacs-lisp
+  (use-package hydra)
+#+end_src
+** ВЫПОЛНИТЬ Org Mode
+настроить переменные настроить файлы agenda 
+#+header:  :noweb-ref emacs-packages
+#+begin_src emacs-lisp
+  (use-package ob-nix)
+  (use-package org
+     :straight (:type built-in)
+     :mode ("\\.org\\(\\|_archive\\(_20[0-9][0-9]\\)?\\)$" . org-mode)
+     :bind (("C-c l" . org-store-link)
+  	      ("C-c a" . org-agenda)
+  	      ("C-c <SPC>" . org-table-blank-field)
+  	      ("C-<f9>" . as-org-get-news)
+  	      ("C-c c" . org-capture)
+  	      )
+     :config 
+  	 (setq org-startup-folded "fold")
+
+  	 (setq org-hide-block-startup "hideblocks")
+  	 (setq org-hide-drawer-startup "hidedrawers")
+  	 (setq org-cycle-separator-lines 10)
+           (setq org-startup-with-inline-images t)
+  	(setq org-link-shell-confirm-function nil)
+  	(setq org-link-elisp-confirm-function nil)
+  	(setq org-confirm-babel-evaluate nil)
+
+  	(global-set-key  (kbd "<f9>")
+  	   (defhydra hydra-org-as-global (:exit t)
+  	    "Полезные команды org"
+  	  ("<SPC>" org-cycle-agenda-files "файлы org")
+  	  ("l"  org-toggle-link-display "отображение ссылок")
+  	  ("<f9>" (find-file "~/Documents/org/") "каталог org")
+  	  ("q" nil "выход")))
+
+  	 (setq org-todo-keywords
+  	   '((sequence "ВЫПОЛНИТЬ(t)"   "|" "ГОТОВО(d!)" )
+  	    (sequence  "ПРИОСТАНОВЛЕНО(w@/!)" "|" "ОТМЕНЕНО(c@)" )))
+
+  	 (setq org-todo-keyword-faces
+  		  (quote (("ВЫПОЛНИТЬ" :foreground "red" :weight bold)
+  		   ("ГОТОВО" :foreground "forest green" :weight bold)
+  		   ("ПРИОСТАНОВЛЕНО" :foreground "orange" :weight bold)
+  		   ("ОТМЕНЕНО" :foreground "forest green" :weight bold))))
+
+  	 (setq org-use-fast-todo-selection t)
+  	 (setq org-treat-S-cursor-todo-selection-as-state-change nil)
+
+  	 (setq org-todo-state-tags-triggers nil)
+
+  	 (setq org-refile-targets (quote ((nil :maxlevel . 9)
+  				   (org-agenda-files  :maxlevel . 9))))
+
+  	 (setq org-directory "~/Документы/org")
+  	 (setq org-default-notes-file "~/Документы/org/todo.org")
+  	(setq org-agenda-files '(
+  				 "~/Документы/org/todo.org"
+  				 "~/Документы/org/diary.org"
+  				 "~/Документы/org/cycle.org"
+  				 ))
+
+  	 (setq org-capture-templates
+  	      (quote (("t" "Выполнить" entry (file "~/Документы/org/todo.org")
+  			  "* ВЫПОЛНИТЬ %?\n%U\n%l\n" )
+  		("j" "Дневник" entry (file+datetree "~/Документы/org/diary.org")
+  			 "* %?\n%T\n" )
+                  ("p" "Новость" entry (file "~/Документы/org/news.org")
+  		       "* %? :NEWS:\n%T\n%c\n" )
+
+  		("w" "org-protocol" entry (file "~/Документы/org/todo.org")
+  			 "* ВЫПОЛНИТЬ Review %c\n%U\n" :immediate-finish t)
+  		("h" "Привычка" entry (file "~/Документы/org/cycle.org")
+  		    "* ВЫПОЛНИТЬ %?\n%U\n%a\nSCHEDULED: %(format-time-string \"%<<%Y-%m-%d %a .+1d/3d>>\")\n
+  		   :PROPERTIES:\n:STYLE: habit\n:REPEAT_TO_STATE: ВЫПОЛНИТЬ\n:END:\n")
+  		)))
+     (push '("\\.\\(pdf\\|djvu\\|epub\\)\\'" . "zathura %s") org-file-apps)
+
+#+end_src
+Настройка експорта latex/pdf разобраться
+#+header:  :noweb-ref emacs-packages
+#+begin_src emacs-lisp
+
+  (setq org-export-default-language "ru") 
+  (setq org-latex-compiler "xelatex")
+  (add-to-list 'org-latex-packages-alist
+	     '("AUTO" "polyglossia" t ( "xelatex" "lualatex")))
+  (add-to-list 'org-latex-packages-alist
+	     '("T2A" "fontenc" t ))
+	 )
+
+#+end_src
+Refiling разобратся
+#+header: :noweb-ref no
+#+begin_src emacs-lisp
+; Цели включают в себя этот файл и любой файл, вносящий вклад в повестку дня — до 9 уровней глубины.
+
+; Используйте полные пути для целей повторного файла — мы храним файлы напрямую в IDO.
+(setq org-refile-use-outline-path t)
+
+; Цели выполняются напрямую с IDO
+(setq org-outline-path-complete-in-steps nil)
+
+; Разрешить refile создавать родительские задачи с подтверждением
+(setq org-refile-allow-creating-parent-nodes (quote confirm))
+
+; Используйте IDO для завершения как буфера, так и файла, а также ido-everwhere для t
+#(setq org-completion-use-ido t)
+#(setq ido-everywhere t)
+#(setq ido-max-directory-size 100000)
+#(ido-mode (quote both))
+; Использовать текущее окно при посещении файлов и буферов с помощью ido
+#(setq ido-default-file-method 'selected-window)
+#(setq ido-default-buffer-method 'selected-window)
+; Использовать текущее окно для косвенного отображения буфера
+#(setq org-indirect-buffer-display 'current-window)
+
+;;;;  настройки refile
+; Исключить задачи состояния ГОТОВО из целевых объектов refile
+(defun bh/verify-refile-target ()
+  "Exclude todo keywords with a done state from refile targets"
+  (not (member (nth 2 (org-heading-components)) org-done-keywords)))
+
+(setq org-refile-target-verify-function 'bh/verify-refile-target)
+#+end_src
+Языки программирования
+#+header:  :noweb-ref emacs-packages
+#+begin_src emacs-lisp
+  (org-babel-do-load-languages
+  'org-babel-load-languages
+  '((shell . t)
+  (eshell . t)
+  (org . t)
+  (python . t)
+  (awk . t)
+  (sed . t)
+  (sqlite . t)
+  (nix . t)))
+#+end_src
+
+** ВЫПОЛНИТЬ Org-Roam
+сделать через use-package
+протестировать ежедневные заметки придумать виды заметок пока литературные, цитаты-заметки, концептуальные, учебные (для усвоєния материала). как ежедневные превратить в концептуальные, копировать?
+ #+begin_src emacs-lisp :noweb-ref emacs-packages
+              (use-package org-roam  :ensure t)
+                (global-set-key "\C-cnf"  'org-roam-node-find)
+                (global-set-key "\C-cni"  'org-roam-node-insert)
+                (global-set-key "\C-cno"  'org-id-get-create)
+                (global-set-key "\C-cnt"  'org-roam-tag-add)
+                (global-set-key "\C-cna"  'org-roam-alias-add)
+                (global-set-key "\C-cnl"  'org-roam-buffer-toggle)
+
+              (defun set-org-roam-dir  (roam-dir)
+                (setq org-roam-directory (file-truename roam-dir))
+                (setq org-roam-db-location (file-truename (concat roam-dir "org-roam.db")))
+        	(org-roam-db-sync)  )
+          (set-org-roam-dir  (concat (getenv "HOME") "/Документы/roam/main/"))
+          (setq org-roam-db-update-on-save t)
+          (global-set-key  (kbd "<f8>")
+               (defhydra hydra-as-global (:exit t)
+         	  "Полезные команды"
+        	("f" org-roam-node-find "org-roam-node-find")
+        	("i" org-roam-node-insert "org-roam-node-insert")
+        	("o"  org-id-get-create "org-id-get-create")
+        	("t" org-roam-tag-add "org-roam-tag-add")
+        	("a" org-roam-alias-add "org-roam-alias-add")
+  	      	("q" nil "выход")))
+          
+;          (setq find-file-visit-truename nil) ;;не использовать символические ссылки
+
+          (setq org-roam-node-display-template (concat "${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
+   (add-to-list 'display-buffer-alist
+                '("\\*org-roam\\*"
+                  (display-buffer-in-direction)
+                  (direction . right)
+                  (window-width . 0.33)
+                  (window-height . fit-window-to-buffer)))
+ (setq org-roam-completion-everywhere t) ;завершение за пределами org-roam
+ (setq org-roam-dailies-directory "daily/")
+
+(setq org-roam-dailies-capture-templates
+      '(("d" "default" entry
+         "* %?"
+         :target (file+head "%<%Y-%m-%d>.org"
+                            "#+title: %<%Y-%m-%d>\n"))))
+#+end_src
+
+*** ВЫПОЛНИТЬ Полезные функции -переделать в меню ivy
+<F12>
+#+header: :noweb-ref emacs-as-commands
+#+begin_src emacs-lisp
+  (global-set-key  (kbd "<f12>")
+       (defhydra hydra-as-global (:exit t)
+	  "Полезные команды"
+	("<SPC>" as-set-truncate-lines-refresh "перенос строк")
+	("s" (switch-to-buffer "*scratch*") "*scratch*")
+	("v" visible-mode "режим отображения")
+	("i" org-display-inline-images "режим изображений")
+	("<f12>" as-crow-translate "crow region")
+	("q" nil "выход")))
+    (global-set-key (kbd "<S-f12>") 'as-crow-translate-help)
+    (global-set-key (kbd "<C-f12>") 'as-org-crow-translate-line)
+    (global-set-key (kbd "<pause>") 'as-kill-current-buffer)
+    (global-set-key (kbd "<XF86Favorites>") 'browse-url-at-point)
+
+		  (defun as-set-truncate-lines-refresh ()
+		    (interactive)
+		    (setq truncate-lines (not truncate-lines))
+		    ;; now refresh window display (an idiom from simple.el):
+		    (save-excursion
+		      (set-window-start (selected-window)
+					(window-start (selected-window)))))
+
+	      (defun as-kill-current-buffer()
+	       (interactive)
+	       (kill-buffer nil))
+
+ 
+#+end_src   
 ** markdown-mode
 #+begin_src emacs-lisp :noweb-ref emacs-packages
   (use-package markdown-mode)
@@ -302,7 +531,7 @@
      	   (setq telega-use-docker t)
      	   (setq telega-emoji-use-images t)
        :config
-     	  (setq default-directory "~/Downloads/")
+     	  (setq default-directory "~/Загрузки/")
                (setq switch-to-buffer-preserve-window-point nil)  	   
                (setq telega-translate-to-language-by-default "uk")
      	  (require 'telega-adblock) 
@@ -535,221 +764,6 @@
 #+begin_src emacs-lisp
    (use-package slime)
 #+end_src
-** ВЫПОЛНИТЬ Org Mode
-настроить переменные настроить файлы agenda 
-#+header:  :noweb-ref emacs-packages
-#+begin_src emacs-lisp
-  (use-package ob-nix)
-  (use-package org
-     :mode ("\\.org\\(\\|_archive\\(_20[0-9][0-9]\\)?\\)$" . org-mode)
-     :bind (("C-c l" . org-store-link)
-  	      ("C-c a" . org-agenda)
-  	      ("C-c <SPC>" . org-table-blank-field)
-  	      ("C-<f9>" . as-org-get-news)
-  	      ("C-c c" . org-capture)
-  	      )
-     :config 
-  	 (setq org-startup-folded "fold")
-
-  	 (setq org-hide-block-startup "hideblocks")
-  	 (setq org-hide-drawer-startup "hidedrawers")
-  	 (setq org-cycle-separator-lines 10)
-           (setq org-startup-with-inline-images t)
-  	(setq org-link-shell-confirm-function nil)
-  	(setq org-link-elisp-confirm-function nil)
-  	(setq org-confirm-babel-evaluate nil)
-
-  	(global-set-key  (kbd "<f9>")
-  	   (defhydra hydra-org-as-global (:exit t)
-  	    "Полезные команды org"
-  	  ("<SPC>" org-cycle-agenda-files "файлы org")
-  	  ("l"  org-toggle-link-display "отображение ссылок")
-  	  ("<f9>" (find-file "~/Documents/org/") "каталог org")
-  	  ("q" nil "выход")))
-
-  	 (setq org-todo-keywords
-  	   '((sequence "ВЫПОЛНИТЬ(t)"   "|" "ГОТОВО(d!)" )
-  	    (sequence  "ПРИОСТАНОВЛЕНО(w@/!)" "|" "ОТМЕНЕНО(c@)" )))
-
-  	 (setq org-todo-keyword-faces
-  		  (quote (("ВЫПОЛНИТЬ" :foreground "red" :weight bold)
-  		   ("ГОТОВО" :foreground "forest green" :weight bold)
-  		   ("ПРИОСТАНОВЛЕНО" :foreground "orange" :weight bold)
-  		   ("ОТМЕНЕНО" :foreground "forest green" :weight bold))))
-
-  	 (setq org-use-fast-todo-selection t)
-  	 (setq org-treat-S-cursor-todo-selection-as-state-change nil)
-
-  	 (setq org-todo-state-tags-triggers nil)
-
-  	 (setq org-refile-targets (quote ((nil :maxlevel . 9)
-  				   (org-agenda-files  :maxlevel . 9))))
-
-  	 (setq org-directory "~/Документы/org")
-  	 (setq org-default-notes-file "~/Документы/org/todo.org")
-  	(setq org-agenda-files '(
-  				 "~/Документы/org/todo.org"
-  				 "~/Документы/org/diary.org"
-  				 "~/Документы/org/cycle.org"
-  				 ))
-
-  	 (setq org-capture-templates
-  	      (quote (("t" "Выполнить" entry (file "~/Документы/org/todo.org")
-  			  "* ВЫПОЛНИТЬ %?\n%U\n%l\n" )
-  		("j" "Дневник" entry (file+datetree "~/Документы/org/diary.org")
-  			 "* %?\n%T\n" )
-                  ("p" "Новость" entry (file "~/Документы/org/news.org")
-  		       "* %? :NEWS:\n%T\n%c\n" )
-
-  		("w" "org-protocol" entry (file "~/Документы/org/todo.org")
-  			 "* ВЫПОЛНИТЬ Review %c\n%U\n" :immediate-finish t)
-  		("h" "Привычка" entry (file "~/Документы/org/cycle.org")
-  		    "* ВЫПОЛНИТЬ %?\n%U\n%a\nSCHEDULED: %(format-time-string \"%<<%Y-%m-%d %a .+1d/3d>>\")\n
-  		   :PROPERTIES:\n:STYLE: habit\n:REPEAT_TO_STATE: ВЫПОЛНИТЬ\n:END:\n")
-  		)))
-     (push '("\\.\\(pdf\\|djvu\\|epub\\)\\'" . "zathura %s") org-file-apps)
-
-#+end_src
-Настройка експорта latex/pdf разобраться
-#+header:  :noweb-ref emacs-packages
-#+begin_src emacs-lisp
-
-  (setq org-export-default-language "ru") 
-  (setq org-latex-compiler "xelatex")
-  (add-to-list 'org-latex-packages-alist
-	     '("AUTO" "polyglossia" t ( "xelatex" "lualatex")))
-  (add-to-list 'org-latex-packages-alist
-	     '("T2A" "fontenc" t ))
-	 )
-
-#+end_src
-Refiling разобратся
-#+header: :noweb-ref no
-#+begin_src emacs-lisp
-; Цели включают в себя этот файл и любой файл, вносящий вклад в повестку дня — до 9 уровней глубины.
-
-; Используйте полные пути для целей повторного файла — мы храним файлы напрямую в IDO.
-(setq org-refile-use-outline-path t)
-
-; Цели выполняются напрямую с IDO
-(setq org-outline-path-complete-in-steps nil)
-
-; Разрешить refile создавать родительские задачи с подтверждением
-(setq org-refile-allow-creating-parent-nodes (quote confirm))
-
-; Используйте IDO для завершения как буфера, так и файла, а также ido-everwhere для t
-#(setq org-completion-use-ido t)
-#(setq ido-everywhere t)
-#(setq ido-max-directory-size 100000)
-#(ido-mode (quote both))
-; Использовать текущее окно при посещении файлов и буферов с помощью ido
-#(setq ido-default-file-method 'selected-window)
-#(setq ido-default-buffer-method 'selected-window)
-; Использовать текущее окно для косвенного отображения буфера
-#(setq org-indirect-buffer-display 'current-window)
-
-;;;;  настройки refile
-; Исключить задачи состояния ГОТОВО из целевых объектов refile
-(defun bh/verify-refile-target ()
-  "Exclude todo keywords with a done state from refile targets"
-  (not (member (nth 2 (org-heading-components)) org-done-keywords)))
-
-(setq org-refile-target-verify-function 'bh/verify-refile-target)
-#+end_src
-Языки программирования
-#+header:  :noweb-ref emacs-packages
-#+begin_src emacs-lisp
-  (org-babel-do-load-languages
-  'org-babel-load-languages
-  '((shell . t)
-  (eshell . t)
-  (org . t)
-  (python . t)
-  (awk . t)
-  (sed . t)
-  (sqlite . t)
-  (nix . t)))
-#+end_src
-
-** ВЫПОЛНИТЬ Org-Roam
-сделать через use-package
-протестировать ежедневные заметки придумать виды заметок пока литературные, цитаты-заметки, концептуальные, учебные (для усвоєния материала). как ежедневные превратить в концептуальные, копировать?
- #+begin_src emacs-lisp :noweb-ref emacs-packages
-              (use-package org-roam  :ensure t)
-                (global-set-key "\C-cnf"  'org-roam-node-find)
-                (global-set-key "\C-cni"  'org-roam-node-insert)
-                (global-set-key "\C-cno"  'org-id-get-create)
-                (global-set-key "\C-cnt"  'org-roam-tag-add)
-                (global-set-key "\C-cna"  'org-roam-alias-add)
-                (global-set-key "\C-cnl"  'org-roam-buffer-toggle)
-
-              (defun set-org-roam-dir  (roam-dir)
-                (setq org-roam-directory (file-truename roam-dir))
-                (setq org-roam-db-location (file-truename (concat roam-dir "org-roam.db")))
-        	(org-roam-db-sync)  )
-          (set-org-roam-dir  (concat (getenv "HOME") "/Документы/roam/main/"))
-          (setq org-roam-db-update-on-save t)
-          (global-set-key  (kbd "<f8>")
-               (defhydra hydra-as-global (:exit t)
-         	  "Полезные команды"
-        	("f" org-roam-node-find "org-roam-node-find")
-        	("i" org-roam-node-insert "org-roam-node-insert")
-        	("o"  org-id-get-create "org-id-get-create")
-        	("t" org-roam-tag-add "org-roam-tag-add")
-        	("a" org-roam-alias-add "org-roam-alias-add")
-  	      	("q" nil "выход")))
-          
-;          (setq find-file-visit-truename nil) ;;не использовать символические ссылки
-
-          (setq org-roam-node-display-template (concat "${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
-   (add-to-list 'display-buffer-alist
-                '("\\*org-roam\\*"
-                  (display-buffer-in-direction)
-                  (direction . right)
-                  (window-width . 0.33)
-                  (window-height . fit-window-to-buffer)))
- (setq org-roam-completion-everywhere t) ;завершение за пределами org-roam
- (setq org-roam-dailies-directory "daily/")
-
-(setq org-roam-dailies-capture-templates
-      '(("d" "default" entry
-         "* %?"
-         :target (file+head "%<%Y-%m-%d>.org"
-                            "#+title: %<%Y-%m-%d>\n"))))
-#+end_src
-
-*** ВЫПОЛНИТЬ Полезные функции -переделать в меню ivy
-<F12>
-#+header: :noweb-ref emacs-as-commands
-#+begin_src emacs-lisp
-  (global-set-key  (kbd "<f12>")
-       (defhydra hydra-as-global (:exit t)
-	  "Полезные команды"
-	("<SPC>" as-set-truncate-lines-refresh "перенос строк")
-	("s" (switch-to-buffer "*scratch*") "*scratch*")
-	("v" visible-mode "режим отображения")
-	("i" org-display-inline-images "режим изображений")
-	("<f12>" as-crow-translate "crow region")
-	("q" nil "выход")))
-    (global-set-key (kbd "<S-f12>") 'as-crow-translate-help)
-    (global-set-key (kbd "<C-f12>") 'as-org-crow-translate-line)
-    (global-set-key (kbd "<pause>") 'as-kill-current-buffer)
-    (global-set-key (kbd "<XF86Favorites>") 'browse-url-at-point)
-
-		  (defun as-set-truncate-lines-refresh ()
-		    (interactive)
-		    (setq truncate-lines (not truncate-lines))
-		    ;; now refresh window display (an idiom from simple.el):
-		    (save-excursion
-		      (set-window-start (selected-window)
-					(window-start (selected-window)))))
-
-	      (defun as-kill-current-buffer()
-	       (interactive)
-	       (kill-buffer nil))
-
- 
-#+end_src   
 ** ВЫПОЛНИТЬ crow-translate - перевод помеченого текста
 сделать отдельный модуль. Перевод делать в виде отдельного временного буфера отдельно перевод строки и отдельно перевод строки org. Асинхронный перевод. 
 #+header:  :noweb-ref emacs-as-commands
@@ -1001,7 +1015,8 @@ Refiling разобратся
       (if  (and marked-files qutebrowser-select-files)
           (with-temp-file qutebrowser-select-files
             (insert (mapconcat 'identity marked-files "\n")))))
-    (delete-frame))
+    (save-buffers-kill-emacs))  
+  					
           
   (define-key dired-mode-map (kbd "z") 'dired-marked-to-qutebrowser)
 #+end_src
